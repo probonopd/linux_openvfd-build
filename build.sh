@@ -15,7 +15,10 @@ cd "$BUILD_DIR"
 
 # Download kernel headers
 echo "Downloading kernel headers..."
-wget -q "$KERNEL_HEADERS_URL" -O linux-headers.deb
+if ! wget -q "$KERNEL_HEADERS_URL" -O linux-headers.deb; then
+    echo "Error: Failed to download kernel headers"
+    exit 1
+fi
 
 # Extract kernel headers
 echo "Extracting kernel headers..."

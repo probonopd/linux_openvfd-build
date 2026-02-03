@@ -52,4 +52,4 @@ To manually trigger a build:
 
 For more information about configuring OpenVFD, see:
 - https://github.com/arthur-liberman/linux_openvfd/
-- https://forum.armbian.com/topic/55312-install-openvfd-for-lcd-display-on-recent-612-kernels-tutorial/. 
+- https://forum.armbian.com/topic/55312-install-openvfd-for-lcd-display-on-recent-612-kernels-tutorial/ 
