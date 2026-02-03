@@ -39,7 +39,7 @@ make KERNELDIR="$KERNEL_SRC" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules
 
 # Copy result to output
 echo "Build successful!"
-OUTPUT_DIR="$(dirname $BUILD_DIR)/output"
+OUTPUT_DIR="$(dirname "$BUILD_DIR")/output"
 mkdir -p "$OUTPUT_DIR"
 cp openvfd.ko "$OUTPUT_DIR/"
 echo "Kernel module saved to: $OUTPUT_DIR/openvfd.ko"
