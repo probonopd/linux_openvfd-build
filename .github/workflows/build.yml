@@ -1,8 +1,10 @@
-name: Build OpenVFD Kernel Module
+name: Build OpenVFD Kernel Module and Service
 
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
@@ -11,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     
     steps:
     - name: Checkout repository
@@ -20,25 +22,88 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y gcc-aarch64-linux-gnu make wget
+        sudo apt-get install -y gcc-aarch64-linux-gnu make wget curl zip
         
-    - name: Build kernel module
+    - name: Build kernel module and OpenVFDService
       run: |
         chmod +x build.sh
         ./build.sh
         
-    - name: Upload kernel module
+    - name: Create release package
+      run: |
+        chmod +x package.sh
+        ./package.sh
+        
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: openvfd-kernel-module
-        path: output/openvfd.ko
+        name: openvfd-release-package
+        path: openvfd-*.zip
         
-    - name: Get module info
+    - name: Get build info
+      id: build_info
       run: |
         echo "### Build Information" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**File:** openvfd.ko" >> $GITHUB_STEP_SUMMARY
-        echo "**Size:** $(ls -lh output/openvfd.ko | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
-        echo "**Type:** $(file output/openvfd.ko)" >> $GITHUB_STEP_SUMMARY
+        echo "**Kernel Module:** openvfd.ko ($(ls -lh output/openvfd.ko | awk '{print $5}'))" >> $GITHUB_STEP_SUMMARY
+        echo "**Service Binary:** OpenVFDService ($(ls -lh output/OpenVFDService | awk '{print $5}'))" >> $GITHUB_STEP_SUMMARY
+        echo "**Package:** $(ls openvfd-*.zip)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Built for:** Linux kernel 6.18.5-meson64 (ARM64)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Installation" >> $GITHUB_STEP_SUMMARY
+        echo "1. Download and extract the zip file" >> $GITHUB_STEP_SUMMARY
+        echo "2. Run \`sudo ./install.sh\` from the extracted directory" >> $GITHUB_STEP_SUMMARY
+        echo "zip_file=$(ls openvfd-*.zip)" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: openvfd-*.zip
+        body: |
+          # OpenVFD Release for debian-on-amlogic kernel 6.18.5-meson64
+          
+          This release includes:
+          - OpenVFD kernel module (`openvfd.ko`)
+          - OpenVFDService binary (statically linked)
+          - Installation script with TX92 configuration
+          
+          ## Installation
+          
+          1. Download the zip file from the assets below
+          2. Extract the zip file on your device
+          3. Run the installation script as root:
+             ```bash
+             sudo ./install.sh
+             ```
+          
+          The installation script will:
+          - Install the kernel module
+          - Install OpenVFDService binary
+          - Download and configure TX92 VFD settings
+          - Set up and start a systemd service
+          
+          ## Compatibility
+          
+          - **Kernel Version:** 6.18.5-meson64
+          - **Architecture:** ARM64 (aarch64)
+          - **Default Configuration:** TX92 device
+          
+          For other devices, you may need to adjust the configuration. See:
+          https://github.com/arthur-liberman/vfd-configurations
+          
+          ## Post-Installation
+          
+          ```bash
+          # Check service status
+          systemctl status openvfd.service
+          
+          # View logs
+          journalctl -u openvfd.service -f
+          
+          # Edit configuration
+          nano /storage/.config/vfd.conf
+          ```
+        draft: false
+        prerelease: false
