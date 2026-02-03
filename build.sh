@@ -38,6 +38,14 @@ make M=scripts/mod ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
 # Build openvfd kernel module
 echo "Building openvfd kernel module..."
 cd "$BUILD_DIR/openvfd-src/driver"
+
+# Patch Makefile for libgpiod
+MAKEFILE=Makefile
+if ! grep -q "CONFIG_OPENVFD_GPIOD" "$MAKEFILE"; then
+    sed -i '/obj-m := openvfd.o/a\
+EXTRA_CFLAGS += -DCONFIG_OPENVFD_GPIOD' "$MAKEFILE"
+fi
+
 make KERNELDIR="$KERNEL_SRC" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules
 
 # Build OpenVFDService
