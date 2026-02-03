@@ -1,0 +1,9 @@
+build/
+output/
+*.o
+*.ko
+*.mod.c
+*.mod
+.tmp_versions/
+modules.order
+Module.symvers

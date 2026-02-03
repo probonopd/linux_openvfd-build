@@ -1,0 +1,42 @@
+name: Build OpenVFD Kernel Module
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-aarch64-linux-gnu make wget
+        
+    - name: Build kernel module
+      run: |
+        chmod +x build.sh
+        ./build.sh
+        
+    - name: Upload kernel module
+      uses: actions/upload-artifact@v4
+      with:
+        name: openvfd-kernel-module
+        path: output/openvfd.ko
+        
+    - name: Get module info
+      run: |
+        echo "### Build Information" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**File:** openvfd.ko" >> $GITHUB_STEP_SUMMARY
+        echo "**Size:** $(ls -lh output/openvfd.ko | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
+        echo "**Type:** $(file output/openvfd.ko)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Built for:** Linux kernel 6.18.5-meson64 (ARM64)" >> $GITHUB_STEP_SUMMARY
