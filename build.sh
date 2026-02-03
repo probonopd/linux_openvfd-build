@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Building openvfd kernel module for debian-on-amlogic kernel 6.18.5-meson64"
+echo "Building openvfd kernel module and OpenVFDService for debian-on-amlogic kernel 6.18.5-meson64"
 
 # Configuration
 KERNEL_VERSION="6.18.5-meson64"
@@ -40,11 +40,20 @@ echo "Building openvfd kernel module..."
 cd "$BUILD_DIR/openvfd-src/driver"
 make KERNELDIR="$KERNEL_SRC" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules
 
-# Copy result to output
+# Build OpenVFDService
+echo "Building OpenVFDService..."
+cd "$BUILD_DIR/openvfd-src"
+aarch64-linux-gnu-gcc -Wall -o OpenVFDService OpenVFDService.c -lm -lpthread -static
+
+# Copy results to output
 echo "Build successful!"
 OUTPUT_DIR="$(dirname "$BUILD_DIR")/output"
 mkdir -p "$OUTPUT_DIR"
-cp openvfd.ko "$OUTPUT_DIR/"
+cp "$BUILD_DIR/openvfd-src/driver/openvfd.ko" "$OUTPUT_DIR/"
+cp "$BUILD_DIR/openvfd-src/OpenVFDService" "$OUTPUT_DIR/"
 echo "Kernel module saved to: $OUTPUT_DIR/openvfd.ko"
+echo "OpenVFDService binary saved to: $OUTPUT_DIR/OpenVFDService"
 ls -lh "$OUTPUT_DIR/openvfd.ko"
+ls -lh "$OUTPUT_DIR/OpenVFDService"
 file "$OUTPUT_DIR/openvfd.ko"
+file "$OUTPUT_DIR/OpenVFDService"

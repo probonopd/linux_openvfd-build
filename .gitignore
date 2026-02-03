@@ -7,3 +7,7 @@ output/
 .tmp_versions/
 modules.order
 Module.symvers
+*.deb
+*.zip
+OpenVFDService
+openvfd-release/
